@@ -1,8 +1,8 @@
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 -- + Complete the 10 exercises below by filling out the function bodies.
 --   Replace the function bodies (error "todo: ...") with an appropriate
@@ -481,9 +481,9 @@ unfoldr ::
   (a -> Optional (b, a))
   -> a
   -> List b
-unfoldr f b  =
-  case f b of
-    Full (a, z) -> a :. unfoldr f z
+unfoldr f a  =
+  case f a of
+    Full (b, a') -> b :. unfoldr f a'
     Empty -> Nil
 
 lines ::
@@ -672,7 +672,8 @@ readFloat ::
 readFloat =
   mapOptional fst . readFloats
 
-instance IsString (List Char) where
+instance (a ~ Char) => IsString (List a) where
+  -- Per https://hackage.haskell.org/package/base-4.14.1.0/docs/src/Data.String.html#line-43
   fromString =
     listh
 
