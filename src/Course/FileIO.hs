@@ -128,10 +128,12 @@ run path = do
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
-main = do
-  args <- getArgs
-  run <$> args
-  pure ()
+main = 
+  error "gotta do this"
+  -- do
+  -- args <- getArgs
+  -- run <$> args
+  -- pure ()
 
 ----
 

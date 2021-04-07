@@ -1,7 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Course.Monad where
 
@@ -11,7 +11,7 @@ import Course.ExactlyOne
 import Course.Functor
 import Course.List
 import Course.Optional
-import qualified Prelude as P((=<<))
+import qualified Prelude as P ((=<<))
 
 -- | All instances of the `Monad` type-class must satisfy one law. This law
 -- is not checked by the compiler. This law is given as:
@@ -21,9 +21,9 @@ import qualified Prelude as P((=<<))
 class Applicative k => Monad k where
   -- Pronounced, bind.
   (=<<) ::
-    (a -> k b)
-    -> k a
-    -> k b
+    (a -> k b) ->
+    k a ->
+    k b
 
 infixr 1 =<<
 
@@ -33,9 +33,9 @@ infixr 1 =<<
 -- ExactlyOne 3
 instance Monad ExactlyOne where
   (=<<) ::
-    (a -> ExactlyOne b)
-    -> ExactlyOne a
-    -> ExactlyOne b
+    (a -> ExactlyOne b) ->
+    ExactlyOne a ->
+    ExactlyOne b
   (=<<) f (ExactlyOne a) = f a
 
 -- | Binds a function on a List.
@@ -44,9 +44,9 @@ instance Monad ExactlyOne where
 -- [1,1,2,2,3,3]
 instance Monad List where
   (=<<) ::
-    (a -> List b)
-    -> List a
-    -> List b
+    (a -> List b) ->
+    List a ->
+    List b
   (=<<) = flatMap
 
 -- | Binds a function on an Optional.
@@ -55,9 +55,9 @@ instance Monad List where
 -- Full 14
 instance Monad Optional where
   (=<<) ::
-    (a -> Optional b)
-    -> Optional a
-    -> Optional b
+    (a -> Optional b) ->
+    Optional a ->
+    Optional b
   (=<<) = bindOptional
 
 -- | Binds a function on the reader ((->) t).
@@ -66,13 +66,13 @@ instance Monad Optional where
 -- 119
 instance Monad ((->) t) where
   (=<<) ::
-    (a -> (->) t b)
-    -> (->) t a
-    -> (->) t b
-  k =<< t2a = f'
-    where f = k <$> t2a
-          f' t = f t t
-
+    (a -> (t -> b)) ->
+    (t -> a) ->
+    (t -> b)
+  a2t2b =<< t2a = f'
+    where
+      f = a2t2b <$> t2a
+      f' t = f t t
 
 -- | Witness that all things with (=<<) and (<$>) also have (<*>).
 --
@@ -107,9 +107,9 @@ instance Monad ((->) t) where
 -- 15
 (<**>) ::
   Monad k =>
-  k (a -> b)
-  -> k a
-  -> k b
+  k (a -> b) ->
+  k a ->
+  k b
 (<**>) = (<*>)
 
 infixl 4 <**>
@@ -129,8 +129,8 @@ infixl 4 <**>
 -- 14
 join ::
   Monad k =>
-  k (k a)
-  -> k a
+  k (k a) ->
+  k a
 join kka = id =<< kka
 
 -- | Implement a flipped version of @(=<<)@, however, use only
@@ -141,9 +141,9 @@ join kka = id =<< kka
 -- 119
 (>>=) ::
   Monad k =>
-  k a
-  -> (a -> k b)
-  -> k b
+  k a ->
+  (a -> k b) ->
+  k b
 (>>=) m a = a =<< m
 
 infixl 1 >>=
@@ -155,10 +155,10 @@ infixl 1 >>=
 -- [2,2,3,3]
 (<=<) ::
   Monad k =>
-  (b -> k c)
-  -> (a -> k b)
-  -> a
-  -> k c
+  (b -> k c) ->
+  (a -> k b) ->
+  a ->
+  k c
 (<=<) =
   error "todo: Course.Monad#(<=<)"
 

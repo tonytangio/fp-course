@@ -1,7 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Course.Applicative where
 
@@ -10,7 +10,7 @@ import Course.ExactlyOne
 import Course.Functor
 import Course.List
 import Course.Optional
-import qualified Prelude as P(fmap, return, (>>=))
+import qualified Prelude as P (fmap, return, (>>=))
 
 -- | All instances of the `Applicative` type-class must satisfy four laws.
 -- These laws are not checked by the compiler. These laws are given as:
@@ -26,15 +26,15 @@ import qualified Prelude as P(fmap, return, (>>=))
 --
 -- * The law of interchange
 --   `∀u y. u <*> pure y = pure ($ y) <*> u`
-
 class Functor k => Applicative k where
   pure ::
     a -> k a
+
   -- Pronounced, apply.
   (<*>) ::
-    k (a -> b)
-    -> k a
-    -> k b
+    k (a -> b) ->
+    k a ->
+    k b
 
 infixl 4 <*>
 
@@ -46,16 +46,15 @@ infixl 4 <*>
 -- ExactlyOne 18
 instance Applicative ExactlyOne where
   pure ::
-    a
-    -> ExactlyOne a
+    a ->
+    ExactlyOne a
   pure =
     error "todo: Course.Applicative pure#instance ExactlyOne"
   (<*>) ::
-    ExactlyOne (a -> b)
-    -> ExactlyOne a
-    -> ExactlyOne b
+    ExactlyOne (a -> b) ->
+    ExactlyOne a ->
+    ExactlyOne b
   ExactlyOne f <*> ExactlyOne a = ExactlyOne $ f a
-
 
 -- | Insert into a List.
 --
@@ -65,16 +64,15 @@ instance Applicative ExactlyOne where
 -- [2,3,4,2,4,6]
 instance Applicative List where
   pure ::
-    a
-    -> List a
+    a ->
+    List a
   pure a = a :. Nil
   (<*>) ::
-    List (a -> b)
-    -> List a
-    -> List b
+    List (a -> b) ->
+    List a ->
+    List b
   Nil <*> _ = Nil
   (f :. tailf) <*> l = map f l ++ (tailf <*> l)
-
 
 -- | Insert into an Optional.
 --
@@ -90,13 +88,13 @@ instance Applicative List where
 -- Empty
 instance Applicative Optional where
   pure ::
-    a
-    -> Optional a
+    a ->
+    Optional a
   pure a = Full a
   (<*>) ::
-    Optional (a -> b)
-    -> Optional a
-    -> Optional b
+    Optional (a -> b) ->
+    Optional a ->
+    Optional b
   Empty <*> _ = Empty
   (Full f) <*> optV = f <$> optV
 
@@ -120,15 +118,14 @@ instance Applicative Optional where
 -- prop> \x y -> pure x y == x
 instance Applicative ((->) t) where
   pure ::
-    a
-    -> (->) t a
+    a ->
+    (->) t a
   pure a = \_ -> a
   (<*>) ::
-    (->) t (a -> b)
-    -> (->) t a
-    -> (->) t b
+    (->) t (a -> b) ->
+    (->) t a ->
+    (->) t b
   f <*> f' = \x -> f x (f' x)
-
 
 -- | Apply a binary function in the environment.
 --
@@ -151,10 +148,10 @@ instance Applicative ((->) t) where
 -- 18
 lift2 ::
   Applicative k =>
-  (a -> b -> c)
-  -> k a
-  -> k b
-  -> k c
+  (a -> b -> c) ->
+  k a ->
+  k b ->
+  k c
 lift2 f a b = f <$> a <*> b
 
 -- | Apply a ternary function in the environment.
@@ -182,11 +179,11 @@ lift2 f a b = f <$> a <*> b
 -- 138
 lift3 ::
   Applicative k =>
-  (a -> b -> c -> d)
-  -> k a
-  -> k b
-  -> k c
-  -> k d
+  (a -> b -> c -> d) ->
+  k a ->
+  k b ->
+  k c ->
+  k d
 lift3 f a b c = f <$> a <*> b <*> c
 
 -- | Apply a quaternary function in the environment.
@@ -214,19 +211,19 @@ lift3 f a b c = f <$> a <*> b <*> c
 -- 148
 lift4 ::
   Applicative k =>
-  (a -> b -> c -> d -> e)
-  -> k a
-  -> k b
-  -> k c
-  -> k d
-  -> k e
-lift4 f a b c d = f <$> a <*> b <*> c <*> d 
+  (a -> b -> c -> d -> e) ->
+  k a ->
+  k b ->
+  k c ->
+  k d ->
+  k e
+lift4 f a b c d = f <$> a <*> b <*> c <*> d
 
 -- | Apply a nullary function in the environment.
 lift0 ::
   Applicative k =>
-  a
-  -> k a
+  a ->
+  k a
 lift0 = pure
 
 -- | Apply a unary function in the environment.
@@ -242,9 +239,9 @@ lift0 = pure
 -- [2,3,4]
 lift1 ::
   Applicative k =>
-  (a -> b)
-  -> k a
-  -> k b
+  (a -> b) ->
+  k a ->
+  k b
 lift1 = (<$>)
 
 -- | Apply, discarding the value of the first argument.
@@ -267,9 +264,9 @@ lift1 = (<$>)
 -- prop> \x y -> Full x *> Full y == Full y
 (*>) ::
   Applicative k =>
-  k a
-  -> k b
-  -> k b
+  k a ->
+  k b ->
+  k b
 (*>) ka kb = const <$> kb <*> ka
 
 -- | Apply, discarding the value of the second argument.
@@ -292,11 +289,10 @@ lift1 = (<$>)
 -- prop> \x y -> Full x <* Full y == Full x
 (<*) ::
   Applicative k =>
+  k b ->
+  k a ->
   k b
-  -> k a
-  -> k b
-(<*) =
-  error "todo: Course.Applicative#(<*)"
+(<*) kb ka = ka *> kb
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -316,8 +312,8 @@ lift1 = (<$>)
 -- [60,8]
 sequence ::
   Applicative k =>
-  List (k a)
-  -> k (List a)
+  List (k a) ->
+  k (List a)
 sequence = foldRight (lift2 (:.)) (pure Nil)
 
 -- | Replicate an effect a given number of times.
@@ -340,11 +336,10 @@ sequence = foldRight (lift2 (:.)) (pure Nil)
 -- ["aaa","aab","aac","aba","abb","abc","aca","acb","acc","baa","bab","bac","bba","bbb","bbc","bca","bcb","bcc","caa","cab","cac","cba","cbb","cbc","cca","ccb","ccc"]
 replicateA ::
   Applicative k =>
-  Int
-  -> k a
-  -> k (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+  Int ->
+  k a ->
+  k (List a)
+replicateA n = sequence . replicate n
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -365,14 +360,12 @@ replicateA =
 --
 -- >>> filtering (const $ True :. True :.  Nil) (1 :. 2 :. 3 :. Nil)
 -- [[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3]]
---
 filtering ::
   Applicative k =>
-  (a -> k Bool)
-  -> List a
-  -> k (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+  (a -> k Bool) ->
+  List a ->
+  k (List a)
+filtering p = foldRight (\a -> lift2 (\b -> if b then (a :.) else id) (p a)) (pure Nil)
 
 -----------------------
 -- SUPPORT LIBRARIES --
@@ -386,22 +379,22 @@ instance Applicative IO where
 
 return ::
   Applicative k =>
-  a
-  -> k a
+  a ->
+  k a
 return =
   pure
 
 fail ::
   Applicative k =>
-  Chars
-  -> k a
+  Chars ->
+  k a
 fail =
   error . hlist
 
 (>>) ::
   Applicative k =>
-  k a
-  -> k b
-  -> k b
+  k a ->
+  k b ->
+  k b
 (>>) =
   (*>)
