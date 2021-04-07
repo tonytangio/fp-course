@@ -72,7 +72,7 @@ however, your first post might be moderated. This is simply to prevent spam.
    on to the exercises starting with `Course.Optional`. The
    [Progression](#progression) section of this document lists the recommended
    order in which to attempt the exercises.
-
+ 
 5. Edit a source file to a proposed solution to an exercise. At the `ghci`
    prompt, issue the command `:reload`. This will compile your solution and
    reload it in the GHC interpreter. You may use `:r` for short.
