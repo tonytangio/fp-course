@@ -366,11 +366,12 @@ distinctG ::
   List a ->
   Logger Chars (Optional (List a))
 distinctG Nil = Logger Nil Empty
-distinctG l = runOptionalT $ fst <$> runStateT (filtering tracking l) S.empty
-  where
-    onEven n = "even number: " ++ (listh . show $ n)
-    onAbort n = "aborting > 100: " ++ (listh . show $ n)
-    tracking a = StateT (\seen -> if S.member a seen then (False, seen) else (True, S.insert a seen))
+
+-- distinctG l = runOptionalT $ fst <$> runStateT (filtering tracking l) S.empty
+--   where
+--     onEven n = "even number: " ++ (listh . show $ n)
+--     onAbort n = "aborting > 100: " ++ (listh . show $ n)
+--     tracking a = StateT (\seen -> if S.member a seen then (False, seen) else (True, S.insert a seen))
 
 onFull ::
   Applicative k =>
