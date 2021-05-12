@@ -1,6 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Course.Contravariant where
 
@@ -12,9 +12,9 @@ import Course.Core
 data Predicate a = Predicate (a -> Bool)
 
 runPredicate ::
-  Predicate a
-  -> a
-  -> Bool
+  Predicate a ->
+  a ->
+  Bool
 runPredicate (Predicate f) =
   f
 
@@ -25,10 +25,10 @@ runPredicate (Predicate f) =
 data Comparison a = Comparison (a -> a -> Ordering)
 
 runComparison ::
-  Comparison a
-  -> a
-  -> a
-  -> Ordering
+  Comparison a ->
+  a ->
+  a ->
+  Ordering
 runComparison (Comparison f) =
   f
 
@@ -37,9 +37,9 @@ runComparison (Comparison f) =
 data SwappedArrow a b = SwappedArrow (b -> a)
 
 runSwappedArrow ::
-  SwappedArrow a b
-  -> b
-  -> a
+  SwappedArrow a b ->
+  b ->
+  a
 runSwappedArrow (SwappedArrow f) = f
 
 -- | All instances of the `Contravariant` type-class must satisfy two
@@ -59,9 +59,9 @@ runSwappedArrow (SwappedArrow f) = f
 class Contravariant k where
   -- Pronounced, contramap.
   (>$<) ::
-    (b -> a)
-    -> k a
-    -> k b
+    (b -> a) ->
+    k a ->
+    k b
 
 infixl 4 >$<
 
@@ -76,11 +76,10 @@ infixl 4 >$<
 -- False
 instance Contravariant Predicate where
   (>$<) ::
-    (b -> a)
-    -> Predicate a
-    -> Predicate b
-  (>$<) =
-    error "todo: Course.Contravariant (>$<)#instance Predicate"
+    (b -> a) ->
+    Predicate a ->
+    Predicate b
+  b2a >$< (Predicate pred) = Predicate $ pred . b2a
 
 -- | Use the function before comparing.
 --
@@ -88,27 +87,24 @@ instance Contravariant Predicate where
 -- GT
 instance Contravariant Comparison where
   (>$<) ::
-    (b -> a)
-    -> Comparison a
-    -> Comparison b
-  (>$<) =
-    error "todo: Course.Contravariant (>$<)#instance Comparison"
+    (b -> a) ->
+    Comparison a ->
+    Comparison b
+  b2a >$< (Comparison ord) = Comparison (\b1 b2 -> ord (b2a b1) (b2a b2))
 
 -- | The kind of the argument to 'Contravariant' is @Type -> Type@, so
 -- our '(>$<)' only works on the final type argument. The
 -- 'SwappedArrow' type reverses the arguments, which gives us the
 -- right shape.
 --
--- >>> runSwappedArrow (length >$< SwappedArrow (+10)) "hello"
+-- >>> runSwappedArrow (length >$< SwappedArrow (+10)) $ listh "hello"
 -- 15
 instance Contravariant (SwappedArrow t) where
   (>$<) ::
-    (b -> a)
-    -> SwappedArrow x a
-    -> SwappedArrow x b
-  (>$<) =
-    error "todo: Course.Contravariant (>$<)#instance SwappedArrow"
-
+    (b -> a) ->
+    SwappedArrow x a ->
+    SwappedArrow x b
+  b2a >$< (SwappedArrow a2x) = SwappedArrow $ a2x . b2a
 
 -- | If we give our 'Contravariant' an @a@, then we can "accept" any
 -- @b@ by ignoring it.
@@ -116,8 +112,7 @@ instance Contravariant (SwappedArrow t) where
 -- prop> \x -> runPredicate (3 >$ Predicate odd) x == True
 (>$) ::
   Contravariant k =>
-  a
-  -> k a
-  -> k b
-(>$) =
-  error "todo: Course.Contravariant#(>$)"
+  a ->
+  k a ->
+  k b
+a >$ ka = const a >$< ka
