@@ -20,7 +20,7 @@ instance
   (Functor f, Functor g) =>
   Functor (Compose f g)
   where
-  f <$> Compose g = Compose ((f <$>) <$> g)
+  f <$> Compose fga = Compose $ (\ga -> f <$> ga) <$> fga
 
 instance
   (Applicative f, Applicative g) =>
@@ -30,7 +30,7 @@ instance
   pure = Compose . pure . pure
 
   -- Implement the (<*>) function for an Applicative instance for Compose
-  Compose f <*> Compose a = Compose (lift2 (<*>) f a)
+  Compose fgab <*> Compose fga = Compose (lift2 (<*>) fgab fga)
 
 instance
   (Monad f, Monad g) =>
@@ -47,4 +47,4 @@ instance
   Contravariant (Compose f g)
   where
   -- Implement the (>$<) function for a Contravariant instance for Compose
-  f >$< g = f >$< g
+  b2a >$< Compose fga = Compose $ (\ga -> b2a >$< ga) <$> fga
