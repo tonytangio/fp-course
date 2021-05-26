@@ -77,8 +77,7 @@ instance
   Traversable (Compose f g)
   where
   -- Implement the traverse function for a Traversable instance for Compose
-  traverse =
-    error "todo: Course.Traversable traverse#instance (Compose f g)"
+  traverse a2kb (Compose fga) = Compose <$> traverse (traverse a2kb) fga
 
 -- | The `Product` data type contains one value from each of the two type constructors.
 data Product f g a
@@ -90,16 +89,17 @@ instance
   Functor (Product f g)
   where
   -- Implement the (<$>) function for a Functor instance for Product
-  (<$>) =
-    error "todo: Course.Traversable (<$>)#instance (Product f g)"
+  f <$> (Product fa ga) = Product (f <$> fa) (f <$> ga)
 
 instance
   (Traversable f, Traversable g) =>
   Traversable (Product f g)
   where
   -- Implement the traverse function for a Traversable instance for Product
-  traverse =
-    error "todo: Course.Traversable traverse#instance (Product f g)"
+  traverse a2kb (Product fa ga) = Product <$> kfb <*> kgb
+    where
+      kfb = traverse a2kb fa
+      kgb = traverse a2kb ga
 
 -- | The `Coproduct` data type contains one value from either of the two type constructors.
 data Coproduct f g a
@@ -112,13 +112,13 @@ instance
   Functor (Coproduct f g)
   where
   -- Implement the (<$>) function for a Functor instance for Coproduct
-  (<$>) =
-    error "todo: Course.Traversable (<$>)#instance (Coproduct f g)"
+  f <$> (InL fa) = InL $ f <$> fa
+  f <$> (InR ga) = InR $ f <$> ga
 
 instance
   (Traversable f, Traversable g) =>
   Traversable (Coproduct f g)
   where
   -- Implement the traverse function for a Traversable instance for Coproduct
-  traverse =
-    error "todo: Course.Traversable traverse#instance (Coproduct f g)"
+  traverse a2kb (InL fa) = InL <$> traverse a2kb fa
+  traverse a2kb (InR ga) = InR <$> traverse a2kb ga
