@@ -1,18 +1,18 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Course.Parser where
 
-import Course.Core
-import Course.Person
-import Course.Functor
 import Course.Applicative
-import Course.Monad
+import Course.Core
+import Course.Functor
 import Course.List
+import Course.Monad
 import Course.Optional
+import Course.Person
 import Data.Char
 
 -- $setup
@@ -21,13 +21,13 @@ import Data.Char
 
 type Input = Chars
 
-data ParseResult a =
-    UnexpectedEof
+data ParseResult a
+  = UnexpectedEof
   | ExpectedEof Input
   | UnexpectedChar Char
   | UnexpectedString Chars
   | Result Input a
-  deriving Eq
+  deriving (Eq)
 
 instance Show a => Show (ParseResult a) where
   show UnexpectedEof =
@@ -55,8 +55,8 @@ instance Functor ParseResult where
 
 -- Function to determine whether this @ParseResult@ is an error.
 isErrorResult ::
-  ParseResult a
-  -> Bool
+  ParseResult a ->
+  Bool
 isErrorResult (Result _ _) =
   False
 isErrorResult UnexpectedEof =
@@ -70,16 +70,16 @@ isErrorResult (UnexpectedString _) =
 
 -- | Runs the given function on a successful parse result. Otherwise return the same failing parse result.
 onResult ::
-  ParseResult a
-  -> (Input -> a -> ParseResult b)
-  -> ParseResult b
+  ParseResult a ->
+  (Input -> a -> ParseResult b) ->
+  ParseResult b
 onResult UnexpectedEof _ =
   UnexpectedEof
 onResult (ExpectedEof i) _ =
   ExpectedEof i
 onResult (UnexpectedChar c) _ =
   UnexpectedChar c
-onResult (UnexpectedString s)  _ =
+onResult (UnexpectedString s) _ =
   UnexpectedString s
 onResult (Result i a) k =
   k i a
@@ -87,16 +87,16 @@ onResult (Result i a) k =
 data Parser a = P (Input -> ParseResult a)
 
 parse ::
-  Parser a
-  -> Input
-  -> ParseResult a
+  Parser a ->
+  Input ->
+  ParseResult a
 parse (P p) =
   p
 
 -- | Produces a parser that always fails with @UnexpectedChar@ using the given character.
 unexpectedCharParser ::
-  Char
-  -> Parser a
+  Char ->
+  Parser a
 unexpectedCharParser c =
   P (\_ -> UnexpectedChar c)
 
@@ -105,8 +105,8 @@ unexpectedCharParser c =
 --- >>> isErrorResult (parse (constantParser UnexpectedEof) "abc")
 --- True
 constantParser ::
-  ParseResult a
-  -> Parser a
+  ParseResult a ->
+  Parser a
 constantParser =
   P . const
 
@@ -117,10 +117,11 @@ constantParser =
 --
 -- >>> isErrorResult (parse character "")
 -- True
-character ::
-  Parser Char
-character =
-  error "todo: Course.Parser#character"
+character :: Parser Char
+character = P parseChar
+  where
+    parseChar Nil = UnexpectedEof
+    parseChar (c :. cs) = Result cs c
 
 -- | Parsers can map.
 -- Write a Functor instance for a @Parser@.
@@ -129,22 +130,21 @@ character =
 -- Result >mz< 'A'
 instance Functor Parser where
   (<$>) ::
-    (a -> b)
-    -> Parser a
-    -> Parser b
-  (<$>) =
-     error "todo: Course.Parser (<$>)#instance Parser"
+    (a -> b) ->
+    Parser a ->
+    Parser b
+  a2b <$> pa = P $ (<$>) a2b <$> parse pa
 
 -- | Return a parser that always succeeds with the given value and consumes no input.
 --
 -- >>> parse (valueParser 3) "abc"
 -- Result >abc< 3
 valueParser ::
-  a
-  -> Parser a
-valueParser =
-  error "todo: Course.Parser#valueParser"
+  a ->
+  Parser a
+valueParser a = P $ \i -> Result i a
 
+-- Called "alternative"
 -- | Return a parser that tries the first parser for a successful value.
 --
 --   * If the first parser succeeds then use this parser.
@@ -163,11 +163,10 @@ valueParser =
 -- >>> parse (constantParser UnexpectedEof ||| valueParser 'v') "abc"
 -- Result >abc< 'v'
 (|||) ::
+  Parser a ->
+  Parser a ->
   Parser a
-  -> Parser a
-  -> Parser a
-(|||) =
-  error "todo: Course.Parser#(|||)"
+p1 ||| p2 = P $ \i -> if isErrorResult (parse p1 i) then parse p2 i else parse p1 i
 
 infixl 3 |||
 
@@ -195,24 +194,23 @@ infixl 3 |||
 -- True
 instance Monad Parser where
   (=<<) ::
-    (a -> Parser b)
-    -> Parser a
-    -> Parser b
+    (a -> Parser b) ->
+    Parser a ->
+    Parser b
   (=<<) =
-    error "todo: Course.Parser (=<<)#instance Parser"
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @(=<<)@.
 instance Applicative Parser where
   pure ::
-    a
-    -> Parser a
+    a ->
+    Parser a
   pure =
     valueParser
   (<*>) ::
-    Parser (a -> b)
-    -> Parser a
-    -> Parser b
+    Parser (a -> b) ->
+    Parser a ->
+    Parser b
   (<*>) =
     error "todo: Course.Parser (<*>)#instance Parser"
 
@@ -230,8 +228,8 @@ instance Applicative Parser where
 -- >>> isErrorResult (parse (satisfy isUpper) "abc")
 -- True
 satisfy ::
-  (Char -> Bool)
-  -> Parser Char
+  (Char -> Bool) ->
+  Parser Char
 satisfy =
   error "todo: Course.Parser#satisfy"
 
@@ -272,6 +270,7 @@ digit =
   error "todo: Course.Parser#digit"
 
 --
+
 -- | Return a parser that produces a space character but fails if
 --
 --   * The input is empty.
@@ -307,9 +306,9 @@ space =
 -- >>> parse (digit .:. valueParser "hello") "321"
 -- Result >21< "3hello"
 (.:.) ::
-  Parser a
-  -> Parser (List a)
-  -> Parser (List a)
+  Parser a ->
+  Parser (List a) ->
+  Parser (List a)
 (.:.) =
   error "todo: Course.Parser#(.:.)"
 
@@ -337,8 +336,8 @@ infixr 5 .:.
 -- >>> parse (list (character *> valueParser 'v')) ""
 -- Result >< ""
 list ::
-  Parser a
-  -> Parser (List a)
+  Parser a ->
+  Parser (List a)
 list =
   error "todo: Course.Parser#list"
 
@@ -356,8 +355,8 @@ list =
 -- >>> isErrorResult (parse (list1 (character *> valueParser 'v')) "")
 -- True
 list1 ::
-  Parser a
-  -> Parser (List a)
+  Parser a ->
+  Parser (List a)
 list1 =
   error "todo: Course.Parser#list1"
 
@@ -422,8 +421,8 @@ alpha =
 -- >>> isErrorResult (parse (sequenceParser (character :. is 'x' :. upper :. Nil)) "abCdef")
 -- True
 sequenceParser ::
-  List (Parser a)
-  -> Parser (List a)
+  List (Parser a) ->
+  Parser (List a)
 sequenceParser =
   error "todo: Course.Parser#sequenceParser"
 
@@ -438,9 +437,9 @@ sequenceParser =
 -- >>> isErrorResult (parse (thisMany 4 upper) "ABcDef")
 -- True
 thisMany ::
-  Int
-  -> Parser a
-  -> Parser (List a)
+  Int ->
+  Parser a ->
+  Parser (List a)
 thisMany =
   error "todo: Course.Parser#thisMany"
 
@@ -459,8 +458,11 @@ thisMany =
 ageParser ::
   Parser Int
 ageParser =
-  (\k -> case read k of Empty  -> constantParser (UnexpectedString k)
-                        Full h -> pure h) =<< (list1 digit)
+  ( \k -> case read k of
+      Empty -> constantParser (UnexpectedString k)
+      Full h -> pure h
+  )
+    =<< (list1 digit)
 
 -- | Write a parser for Person.firstName.
 -- /First Name: non-empty string that starts with a capital letter and is followed by zero or more lower-case letters/
@@ -627,9 +629,9 @@ personParser =
 -- Did you repeat yourself in `personParser` ? This might help:
 
 (>>=~) ::
-  Parser a
-  -> (a -> Parser b)
-  -> Parser b
+  Parser a ->
+  (a -> Parser b) ->
+  Parser b
 (>>=~) p f =
   (p <* spaces1) >>= f
 
@@ -638,9 +640,9 @@ infixl 1 >>=~
 -- or maybe this
 
 (<*>~) ::
-  Parser (a -> b)
-  -> Parser a
-  -> Parser b
+  Parser (a -> b) ->
+  Parser a ->
+  Parser b
 (<*>~) f a =
   f <*> spaces1 *> a
 
