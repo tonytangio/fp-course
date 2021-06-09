@@ -145,6 +145,7 @@ valueParser ::
 valueParser a = P $ \i -> Result i a
 
 -- Called "alternative"
+
 -- | Return a parser that tries the first parser for a successful value.
 --
 --   * If the first parser succeeds then use this parser.
@@ -197,7 +198,9 @@ instance Monad Parser where
     (a -> Parser b) ->
     Parser a ->
     Parser b
-  (=<<) =
+  a2pb =<< pa = P $ \x ->
+    let result = parse pa x
+     in onResult result (\i a -> parse (a2pb a) i)
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @(=<<)@.
@@ -211,8 +214,7 @@ instance Applicative Parser where
     Parser (a -> b) ->
     Parser a ->
     Parser b
-  (<*>) =
-    error "todo: Course.Parser (<*>)#instance Parser"
+  pab <*> pa = (\a2b -> a2b <$> pa) =<< pab
 
 -- | Return a parser that produces a character but fails if
 --
@@ -230,8 +232,10 @@ instance Applicative Parser where
 satisfy ::
   (Char -> Bool) ->
   Parser Char
-satisfy =
-  error "todo: Course.Parser#satisfy"
+satisfy pred = P check
+  where
+    check Nil = UnexpectedEof
+    check (h :. t) = if pred h then Result t h else UnexpectedChar h
 
 -- | Return a parser that produces the given character but fails if
 --
@@ -338,8 +342,7 @@ infixr 5 .:.
 list ::
   Parser a ->
   Parser (List a)
-list =
-  error "todo: Course.Parser#list"
+list pa = list1 pa ||| pure Nil
 
 -- | Return a parser that produces at least one value from the given parser then
 -- continues producing a list of values from the given parser (to ultimately produce a non-empty list).
@@ -357,8 +360,7 @@ list =
 list1 ::
   Parser a ->
   Parser (List a)
-list1 =
-  error "todo: Course.Parser#list1"
+list1 pa = pa .:. list pa
 
 -- | Return a parser that produces one or more space characters
 -- (consuming until the first non-space) but fails if
