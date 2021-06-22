@@ -214,7 +214,7 @@ instance Applicative Parser where
     Parser (a -> b) ->
     Parser a ->
     Parser b
-  pab <*> pa = (\a2b -> a2b <$> pa) =<< pab
+  pab <*> pa = (<$> pa) =<< pab
 
 -- | Return a parser that produces a character but fails if
 --
@@ -246,8 +246,7 @@ satisfy pred = P check
 -- /Tip:/ Use the @satisfy@ function.
 is ::
   Char -> Parser Char
-is =
-  error "todo: Course.Parser#is"
+is char = satisfy (== char)
 
 -- | Return a parser that produces a character between '0' and '9' but fails if
 --
@@ -270,8 +269,7 @@ is =
 -- True
 digit ::
   Parser Char
-digit =
-  error "todo: Course.Parser#digit"
+digit = satisfy isDigit
 
 --
 
@@ -296,8 +294,7 @@ digit =
 -- True
 space ::
   Parser Char
-space =
-  error "todo: Course.Parser#space"
+space = satisfy isSpace
 
 -- | Return a parser that conses the result of the first parser onto the result of
 -- the second. Pronounced "cons parser".
@@ -313,8 +310,8 @@ space =
   Parser a ->
   Parser (List a) ->
   Parser (List a)
-(.:.) =
-  error "todo: Course.Parser#(.:.)"
+-- pa .:. pl = P $ \input -> onResult (parse pa input) (\input2 output -> onResult (parse p1 input2))
+pa .:. pl = P $ \input -> parse (lift2 (:.) pa pl) input
 
 infixr 5 .:.
 
@@ -372,8 +369,7 @@ list1 pa = pa .:. list pa
 -- /Tip:/ Use the @list1@ and @space@ functions.
 spaces1 ::
   Parser Chars
-spaces1 =
-  error "todo: Course.Parser#spaces1"
+spaces1 = list1 space
 
 -- | Return a parser that produces a lower-case character but fails if
 --
@@ -384,8 +380,7 @@ spaces1 =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isLower@ functions.
 lower ::
   Parser Char
-lower =
-  error "todo: Course.Parser#lower"
+lower = satisfy isLower
 
 -- | Return a parser that produces an upper-case character but fails if
 --
@@ -396,8 +391,7 @@ lower =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isUpper@ functions.
 upper ::
   Parser Char
-upper =
-  error "todo: Course.Parser#upper"
+upper = satisfy isUpper
 
 -- | Return a parser that produces an alpha character but fails if
 --
@@ -408,8 +402,7 @@ upper =
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isAlpha@ functions.
 alpha ::
   Parser Char
-alpha =
-  error "todo: Course.Parser#alpha"
+alpha = satisfy isAlpha
 
 -- | Return a parser that sequences the given list of parsers by producing all their results
 -- but fails on the first failing parser of the list.
@@ -425,8 +418,11 @@ alpha =
 sequenceParser ::
   List (Parser a) ->
   Parser (List a)
-sequenceParser =
-  error "todo: Course.Parser#sequenceParser"
+sequenceParser parsers = foldRight sequence (pure Nil) parsers
+  where
+    sequence parser sequencedParser = (\a -> (a :.) <$> sequencedParser) =<< parser
+
+-- sequence parser parsers = (\a -> P $ \i -> onResult (parse parsers i) (\i a2 -> Result i (a :. a2))) =<< parser
 
 -- | Return a parser that produces the given number of values off the given parser.
 -- This parser fails if the given parser fails in the attempt to produce the given number of values.
@@ -442,8 +438,7 @@ thisMany ::
   Int ->
   Parser a ->
   Parser (List a)
-thisMany =
-  error "todo: Course.Parser#thisMany"
+thisMany n pa = sequenceParser (replicate n pa)
 
 -- | This one is done for you.
 --
@@ -464,7 +459,7 @@ ageParser =
       Empty -> constantParser (UnexpectedString k)
       Full h -> pure h
   )
-    =<< (list1 digit)
+    =<< list1 digit
 
 -- | Write a parser for Person.firstName.
 -- /First Name: non-empty string that starts with a capital letter and is followed by zero or more lower-case letters/
@@ -479,7 +474,11 @@ ageParser =
 firstNameParser ::
   Parser Chars
 firstNameParser =
-  error "todo: Course.Parser#firstNameParser"
+  ( \k -> case read k of
+      Empty -> constantParser (UnexpectedChar k)
+      Full h -> (h :.) <$> list lower
+  )
+    =<< upper
 
 -- | Write a parser for Person.surname.
 --
@@ -635,7 +634,7 @@ personParser =
   (a -> Parser b) ->
   Parser b
 (>>=~) p f =
-  (p <* spaces1) >>= f
+  p <* spaces1 >>= f
 
 infixl 1 >>=~
 
