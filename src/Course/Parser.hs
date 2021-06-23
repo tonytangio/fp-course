@@ -473,12 +473,13 @@ ageParser =
 -- True
 firstNameParser ::
   Parser Chars
-firstNameParser =
-  ( \k -> case read k of
-      Empty -> constantParser (UnexpectedChar k)
-      Full h -> (h :.) <$> list lower
-  )
-    =<< upper
+-- firstNameParser =
+--   ( \k -> case read k of
+--       Empty -> constantParser (UnexpectedChar k)
+--       Full h -> (h :.) <$> list lower
+  
+--     =<< upper)
+firstNameParser = lift2 (:.) upper (list lower)
 
 -- | Write a parser for Person.surname.
 --
@@ -500,7 +501,10 @@ firstNameParser =
 surnameParser ::
   Parser Chars
 surnameParser =
-  error "todo: Course.Parser#surnameParser"
+  upper >>= \c ->
+  thisMany 5 lower >>= \cs ->
+  list lower >>= \t ->
+  valueParser (c :. cs ++ t)
 
 -- | Write a parser for Person.smoker.
 --
@@ -519,7 +523,7 @@ surnameParser =
 smokerParser ::
   Parser Bool
 smokerParser =
-  error "todo: Course.Parser#smokerParser"
+  True <$ is 'y' ||| False <$ is 'n'
 
 -- | Write part of a parser for Person#phoneBody.
 -- This parser will only produce a string of digits, dots or hyphens.
@@ -541,7 +545,7 @@ smokerParser =
 phoneBodyParser ::
   Parser Chars
 phoneBodyParser =
-  error "todo: Course.Parser#phoneBodyParser"
+  list (digit ||| is '.' ||| is '-')
 
 -- | Write a parser for Person.phone.
 --
@@ -563,7 +567,10 @@ phoneBodyParser =
 phoneParser ::
   Parser Chars
 phoneParser =
-  error "todo: Course.Parser#phoneParser"
+  digit >>= \d ->
+  phoneBodyParser >>= \z ->
+  is '#' *>
+  valueParser (d :. z)
 
 -- | Write a parser for Person.
 --
@@ -621,7 +628,17 @@ phoneParser =
 personParser ::
   Parser Person
 personParser =
-  error "todo: Course.Parser#personParser"
+  ageParser >>= \a ->
+  spaces1 *>
+  firstNameParser >>= \f ->
+  spaces1 *>
+  surnameParser >>= \s ->
+  spaces1 *>
+  smokerParser >>= \g ->
+  spaces1 *>
+  phoneParser >>= \p ->
+  valueParser (Person a f s g p)
+
 
 -- Make sure all the tests pass!
 
