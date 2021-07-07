@@ -112,8 +112,9 @@ toSpecialCharacter c =
 -- True
 jsonString ::
   Parser Chars
-jsonString =
-  error "todo: Course.JsonParser#jsonString"
+jsonString = between
+  (is (fromSpecialCharacter DoubleQuote)) 
+  (is (fromSpecialCharacter DoubleQuote))
 
 -- | Parse a JSON rational.
 --

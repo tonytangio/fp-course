@@ -468,8 +468,7 @@ zip =
   zipWith (,)
 
 zipWith ::
-  (a -> b -> c)
-  -> List a
+  (a -> b -> c) -> List a
   -> List b
   -> List c
 zipWith f (a:.as) (b:.bs) =
