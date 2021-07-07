@@ -233,7 +233,7 @@ betweenCharTok ::
   -> Char
   -> Parser a
   -> Parser a
-betweenCharTok first last middle = between (charTok first) (charTok last) middle
+betweenCharTok first last middle = between (is first) (is last) middle
 
 -- | Write a function that parses 4 hex digits and return the character value.
 --

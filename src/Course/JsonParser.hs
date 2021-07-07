@@ -112,9 +112,26 @@ toSpecialCharacter c =
 -- True
 jsonString ::
   Parser Chars
-jsonString = between
-  (is (fromSpecialCharacter DoubleQuote)) 
-  (is (fromSpecialCharacter DoubleQuote))
+  -- jsonString = betweenCharTok '"' '"'
+  -- $ list $ special ||| noneof ('"' :. '\\' :. Nil)
+  --   where special = is '\\' >> (
+  --           is (fromSpecialCharacter DoubleQuote) |||
+  --           is (fromSpecialCharacter Backslash) |||
+  --           is '/' |||
+  --           is (fromSpecialCharacter BackSpace) |||
+  --           is (fromSpecialCharacter FormFeed) |||
+  --           is (fromSpecialCharacter NewLine) |||
+  --           is (fromSpecialCharacter CarriageReturn) |||
+  --           is (fromSpecialCharacter Tab) |||
+  --           (is 'u' >> hex))
+jsonString = betweenCharTok '"' '"'
+  $ list $ special ||| noneof ('"' :. '\\' :. Nil)
+    where special = is '\\' >> (P (\c -> case toSpecialCharacter c of 
+                                  Empty -> UnexpectedChar c
+                                  Full c -> fromSpecialCharacter c)|||
+            (is 'u' >> hex))
+
+-- jsonString = error "bl"
 
 -- | Parse a JSON rational.
 --
