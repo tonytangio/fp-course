@@ -198,9 +198,10 @@ instance Monad Parser where
     (a -> Parser b) ->
     Parser a ->
     Parser b
-  a2pb =<< pa = P $ \x ->
-    let result = parse pa x
-     in onResult result (\i a -> parse (a2pb a) i)
+  -- a2pb =<< pa = P $ \x ->
+  --   let result = parse pa x
+  --    in onResult result (\i a -> parse (a2pb a) i)
+  k =<< pa = P $ \i -> onResult (parse pa i) (\i' a -> parse (k a) i')
 
 -- | Write an Applicative functor instance for a @Parser@.
 -- /Tip:/ Use @(=<<)@.
